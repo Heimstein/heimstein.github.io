@@ -152,14 +152,16 @@ function RotateTetromino(clockwise) {
     }
     let tetromino = [];
     let oldRotateIndex = rotateIndex;
-    let newRotateIndex = rotateIndex + clockwise ? 1 : -1;
-    newRotateIndex = mod(newRotateIndex, 4);
+    let newRotateIndex = rotateIndex + (clockwise ? 1 : -1);
+    newRotateIndex = newRotateIndex % 4;
     let oldTetromino = JSON.parse(JSON.stringify(curTetromino));
 
     for (let i = 0; i < curTetromino.length; i++) {
         tetromino.push(RotateTile(curTetromino[i], clockwise));
     }
-    RotateOffset(JSON.parse(JSON.stringify(tetromino)), oldTetromino, oldRotateIndex, newRotateIndex);
+    if (RotateOffset(tetromino, oldTetromino, oldRotateIndex, newRotateIndex)) {
+        rotateIndex = newRotateIndex;
+    }
 }
 
 
@@ -199,7 +201,7 @@ function HitWall(tetromino) {
 
 function HitTetromino(tetromino) {
     for (let i = 0; i < tetromino.length; i++) {
-        if (typeof gameBoard[JSON.parse(JSON.stringify(tetromino))[i][0]][JSON.parse(JSON.stringify(tetromino))[i][1]] === 'string') {
+        if (typeof gameBoard[tetromino[i][0]][tetromino[i][1]] === 'string') {
             return true;
         }
     }
@@ -283,8 +285,10 @@ function DrawTetrisLogo() {
 
 /****************************************************/
 //    ROTATION HELPERS
+Number.prototype.mod = function(n) {
+    return ((this%n)+n)%n;
+};
 
-const mod = (x, n) => (x % n + n) % n;
 
 function GetOriginOffset() {
     if (curTetrominoType === TETROMINO_TYPES.J ||
@@ -321,7 +325,7 @@ function RotateTile(tilePos, clockwise) {
     relativeX = tilePos[0] - centerX;
     relativeY = tilePos[1] - centerY;
 
-    let rotMatrix = clockwise ? [[0, -1], [1, 0]] : [[0, 1], [-1, 0]];
+    let rotMatrix = clockwise ? [[0, 1], [-1, 0]] : [[0, -1], [1, 0]];
 
     let newX = (rotMatrix[0][0] * relativeX) + (rotMatrix[1][0] * relativeY);
     let newY = (rotMatrix[0][1] * relativeX) + (rotMatrix[1][1] * relativeY);
@@ -342,26 +346,21 @@ function RotateOffset(tetromino, oldTetromino, oldRotateIndex, newRotateIndex) {
     }
     for (let testIndex = 0; testIndex < 5; testIndex++) {
         let tempTetromino = JSON.parse(JSON.stringify(tetromino));
-        offsetVal1 = curOffsetData[testIndex, oldRotateIndex];
-        offsetVal2 = curOffsetData[testIndex, newRotateIndex];
+        offsetVal1 = curOffsetData[testIndex][oldRotateIndex];
+        offsetVal2 = curOffsetData[testIndex][newRotateIndex];
         endOffset = [offsetVal1[0] - offsetVal2[0], offsetVal1[1] - offsetVal2[1]];
         for (let i = 0; i < tempTetromino.length; i++) {
-            console.log(tempTetromino[i][0]);
-            console.log(tempTetromino[i][1]);
-            console.log(endOffset);
-            tempTetromino[i][0] += endOffset[0];
-            tempTetromino[i][1] += endOffset[1];
-            console.log(tempTetromino[i][0]);
-            console.log(tempTetromino[i][1]);
+            tempTetromino[i][0] -= endOffset[0];
+            tempTetromino[i][1] -= endOffset[1];
         }
-        console.log(JSON.parse(JSON.stringify(tempTetromino)));
-        if (!HitWall(JSON.parse(JSON.stringify(tempTetromino))) && !HitTetromino(JSON.parse(JSON.stringify(tempTetromino)))) {
-            curTetromino = JSON.parse(JSON.stringify(tempTetromino));
+        if (!HitWall(tempTetromino) && !HitTetromino(tempTetromino)) {
+            curTetromino = tempTetromino;
             DeleteTetromino(oldTetromino);
             DrawTetromino(curTetromino, curTetrominoColor);
             return true;
         }
     }
+    return false;
 }
 
 let JLSTZ_offset = [

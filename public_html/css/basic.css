@@ -1,0 +1,16 @@
+body {background-color: #010101;}
+  .header {
+    color: #69779b;
+    font-size: x-large;
+    font-weight: bold;
+  }
+  .paragraph {
+    color: #acdbdf;
+    font-size: medium;
+    font-weight: normal;
+  }
+  .small-text {
+    color: #f0ece2;
+    font-size: small;
+    font-weight: normal;
+  }

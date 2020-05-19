@@ -61,14 +61,11 @@ function SetupCanvas() {
     canvas.width = 936;
     canvas.height = 956;
 
-    // Double the size of elements to fit the screen
     ctx.scale(2, 2);
 
-    // Draw Canvas background
     ctx.fillStyle = 'white';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Draw gameboard rectangle
     ctx.strokeStyle = 'black';
     ctx.strokeRect(8, 8, 280, 462);
 
@@ -122,10 +119,8 @@ function SetupCanvas() {
     document.addEventListener('keydown', HandleKeyPress);
 
     CreateCoordArray();
-    // 3. Generate random Tetromino
+    
     CreateTetromino();
-
-    // Create the rectangle lookup table
 }
 
 function HandleKeyPress(key) {
@@ -143,24 +138,6 @@ function HandleKeyPress(key) {
         } else if (key.keyCode === 69) {
             RotateTetromino(true);
         }
-    }
-}
-
-function RotateTetromino(clockwise) {
-    if (curTetrominoType === TETROMINO_TYPES.SQUARE) {
-        return;
-    }
-    let tetromino = [];
-    let oldRotateIndex = rotateIndex;
-    let newRotateIndex = rotateIndex + (clockwise ? 1 : -1);
-    newRotateIndex = newRotateIndex % 4;
-    let oldTetromino = JSON.parse(JSON.stringify(curTetromino));
-
-    for (let i = 0; i < curTetromino.length; i++) {
-        tetromino.push(RotateTile(curTetromino[i], clockwise));
-    }
-    if (RotateOffset(tetromino, oldTetromino, oldRotateIndex, newRotateIndex)) {
-        rotateIndex = newRotateIndex;
     }
 }
 
@@ -275,16 +252,32 @@ function DrawTetrisLogo() {
     ctx.drawImage(tetrisLogo, 300, 8, 161, 54);
 }
 
-// window.setInterval(function () {
-//     if (status !== "Game Over")
-//         MoveTetromino(0, 1);
-// }, 1000);
+window.setInterval(function () {
+    if (status !== "Game Over")
+        MoveTetromino(0, 1);
+}, 1000);
 
 
 
 
 /****************************************************/
-//    ROTATION HELPERS
+//    ROTATION
+
+function RotateTetromino(clockwise) {
+    let tetromino = [];
+    let oldRotateIndex = rotateIndex;
+    let newRotateIndex = rotateIndex + (clockwise ? 1 : -1);
+    newRotateIndex = newRotateIndex % 4;
+    let oldTetromino = JSON.parse(JSON.stringify(curTetromino));
+    
+    for (let i = 0; i < curTetromino.length; i++) {
+        tetromino.push(RotateTile(curTetromino[i], clockwise));
+    }
+    if (RotateOffset(tetromino, oldTetromino, oldRotateIndex, newRotateIndex)) {
+        rotateIndex = newRotateIndex;
+    }
+}
+
 Number.prototype.mod = function(n) {
     return ((this%n)+n)%n;
 };
@@ -303,8 +296,27 @@ function GetOriginOffset() {
         } else {
             return [1, 0];
         }
+    } else if (curTetrominoType === TETROMINO_TYPES.I) {
+        if (rotateIndex === 0) {
+            return [1, 0];
+        } else if (rotateIndex === 1) {
+            return [0,1];
+        } else if (rotateIndex === 2) {
+            return [2,0];
+        } else if (rotateIndex === 3) {
+            return [0,2];
+        }
+    } else if (curTetrominoType === TETROMINO_TYPES.SQUARE) {
+        if (rotateIndex === 0) {
+            return [0,1];
+        } else if (rotateIndex === 1) {
+            return [0,0];
+        } else if (rotateIndex === 2) {
+            return [1,0];
+        } else if (rotateIndex === 3) {
+            return [1,1];
+        }
     }
-    return [1.5, 1.5]; //I
 }
 
 function GetPiecePosition() {
@@ -329,7 +341,6 @@ function RotateTile(tilePos, clockwise) {
 
     let newX = (rotMatrix[0][0] * relativeX) + (rotMatrix[1][0] * relativeY);
     let newY = (rotMatrix[0][1] * relativeX) + (rotMatrix[1][1] * relativeY);
-
     return [centerX + newX, centerY + newY];
 }
 
@@ -337,21 +348,23 @@ function RotateOffset(tetromino, oldTetromino, oldRotateIndex, newRotateIndex) {
     let offsetVal1, offsetVal2, endOffset = [0, 0];
     let curOffsetData;
 
-    if (curTetrominoType === TETROMINO_TYPES.SQUARE) {
-        curOffsetData = square_offset;
-    } else if (curTetrominoType === TETROMINO_TYPES.I) {
+    if (curTetrominoType === TETROMINO_TYPES.I) {
         curOffsetData = I_offset;
+    } else if (curTetrominoType === TETROMINO_TYPES.SQUARE) {
+        curOffsetData = square_offset;
     } else {
         curOffsetData = JLSTZ_offset;
-    }
+    } 
     for (let testIndex = 0; testIndex < 5; testIndex++) {
         let tempTetromino = JSON.parse(JSON.stringify(tetromino));
         offsetVal1 = curOffsetData[testIndex][oldRotateIndex];
         offsetVal2 = curOffsetData[testIndex][newRotateIndex];
+
         endOffset = [offsetVal1[0] - offsetVal2[0], offsetVal1[1] - offsetVal2[1]];
+
         for (let i = 0; i < tempTetromino.length; i++) {
-            tempTetromino[i][0] -= endOffset[0];
-            tempTetromino[i][1] -= endOffset[1];
+            tempTetromino[i][0] += endOffset[0];
+            tempTetromino[i][1] += endOffset[1];
         }
         if (!HitWall(tempTetromino) && !HitTetromino(tempTetromino)) {
             curTetromino = tempTetromino;
@@ -399,8 +412,8 @@ let I_offset = [
     [
         [0, 0],
         [-1, 0],
-        [-1, 1],
-        [0, 1],
+        [-1, -1],
+        [1, -1],
     ],
     [
         [-1, 0],
@@ -430,8 +443,8 @@ let I_offset = [
 let square_offset = [
     [
         [0, 0],
-        [0, -1],
-        [-1, -1],
+        [0, 1],
+        [-1, 1],
         [-1, 0],
     ]
 ];

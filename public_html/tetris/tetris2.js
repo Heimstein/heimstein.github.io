@@ -4,6 +4,7 @@ let level = 1;
 let gBArrayHeight = 20;
 let gBArrayWidth = 12;
 let status = "";
+let tetris_clear = false;
 
 let tetrominos = // Push T 
     [[[1, 0], [0, 1], [1, 1], [2, 1]],
@@ -42,9 +43,9 @@ let nextTetrominoType;
 
 let rotateIndex = 0;
 
-let gameBoard = [...Array(gBArrayHeight)].map(e => Array(gBArrayWidth).fill(0));
+let gameBoard = [...Array(gBArrayWidth)].map(e => Array(gBArrayHeight).fill(0));
 
-let coordinateArray = [...Array(gBArrayHeight)].map(e => Array(gBArrayWidth).fill(0));
+let coordinateArray = [...Array(gBArrayWidth)].map(e => Array(gBArrayHeight).fill(0));
 
 class Coordinates {
     constructor(x, y) {
@@ -189,11 +190,73 @@ function AddTetrominoToGameBoard(tetromino, tetrominoColor) {
     for (let i = 0; i < tetromino.length; i++) {
         gameBoard[tetromino[i][0]][tetromino[i][1]] = tetrominoColor;
     }
+    let numRowsCleared = 0;
+    for (let i = 0; i < gBArrayHeight; i++) {
+        let clear = true;
+        for (let j = 0; j < gBArrayWidth; j++) {
+            if (gameBoard[j][i] === 0) {
+                clear = false;
+            }
+        }
+        if (clear) {
+            console.log('clear');
+            let toDelete = [];
+            numRowsCleared++;
+            for (let k = i; k > 0; k--) {
+                let filledIn = false;
+                for (let j = 0; j < gBArrayWidth; j++) {
+                    if (gameBoard[j][k-1] !== 0) {
+                        filledIn = true;
+                    }
+                    console.log('moving ', j, k-1,  gameBoard[j][k-1], 'from ', j,k, gameBoard[j][k]);
+                    gameBoard[j][k] = gameBoard[j][k-1];
+                }
+                if (!filledIn) {
+                    break;
+                }
+            }
+            // clear first row (cant copy down)
+            for (let j = 0; j < gBArrayWidth; j++) {
+                gameBoard[j][0] = 0;
+            }
+            ReDrawGameBoard();
+        }
+    }
+    if (numRowsCleared === 1) {
+        score += 100;
+        tetris_clear = false;
+    } else if (numRowsCleared === 2) {
+        score += 300;
+        tetris_clear = false;
+    } else if (numRowsCleared === 3) {
+        score += 550;
+        tetris_clear = false;
+    } else if (numRowsCleared >= 4) {
+        // back-to-back tetris get 1200 (normal gets 800)
+        if (tetris_clear) {
+            score += 400;
+        }
+        score += 800;
+        tetris_clear = true;
+    }
+    ctx.fillStyle = 'white';
+    ctx.fillRect(310, 109, 140, 19);
+    ctx.fillStyle = 'black';
+    ctx.fillText(score.toString(), 310, 127);
 }
 
 
 
-
+function ReDrawGameBoard() {
+    for (let i = 0; i < gBArrayWidth; i++) {
+        for (let j = 0; j < gBArrayHeight; j++) {
+            let coordinate = coordinateArray[i][j];
+            ctx.fillStyle = typeof gameBoard[i][j] === 'string' ? 
+                gameBoard[i][j] : 'white';
+            ctx.fillRect(coordinate.x, coordinate.y, 21, 21);
+        }
+    }
+}
 
 
 function DeleteTetromino(tetromino) {
@@ -246,6 +309,7 @@ function CreateTetromino() {
     let randomTetromino = Math.floor(Math.random() * tetrominos.length);
     nextTetromino = tetrominos[randomTetromino];
     nextTetrominoColor = tetrominoColors[randomTetromino];
+    nextTetrominoType = randomTetromino;
 }
 
 function DrawTetrisLogo() {

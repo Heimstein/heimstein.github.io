@@ -95,10 +95,9 @@ function SetupCanvas() {
     ctx.fillText(level.toString(), 310, 190);
 
     // Draw next label text
-    ctx.fillText("Status", 300, 221);
+    ctx.fillText("Next Piece", 300, 221);
 
     // Draw playing condition
-    ctx.fillText(status, 310, 261);
 
     // Draw playing condition rectangle
     ctx.strokeRect(300, 232, 161, 95);
@@ -304,12 +303,24 @@ function CreateTetromino() {
     if (!MoveTetromino(initPlacement, 0)) {
         status = "Game Over";
         ctx.fillStyle = 'black';
-        ctx.fillText(status, 310, 261);
+        ctx.font = '41px Arial';
+        ctx.fillText(status, 40, 200);
     }
     let randomTetromino = Math.floor(Math.random() * tetrominos.length);
     nextTetromino = tetrominos[randomTetromino];
     nextTetrominoColor = tetrominoColors[randomTetromino];
     nextTetrominoType = randomTetromino;
+
+    ctx.fillStyle = 'white';
+    ctx.fillRect(321, 249, 100, 50);
+
+    for (let i = 0; i < nextTetromino.length; i++) {
+        let coordinate = coordinateArray[nextTetromino[i][0]][nextTetromino[i][1]];
+        ctx.fillStyle = nextTetrominoColor;
+        ctx.fillRect(coordinate.x + 310, coordinate.y + 240, 21, 21);
+    }
+
+    // ctx.fillText(status, 310, 261);
 }
 
 function DrawTetrisLogo() {

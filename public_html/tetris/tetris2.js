@@ -3,7 +3,7 @@ let score = 0;
 let level = 1;
 let gBArrayHeight = 20;
 let gBArrayWidth = 12;
-let status = "";
+let status = "Press Space to Start";
 let tetris_clear = false;
 
 let tetrominos = // Push T 
@@ -85,6 +85,9 @@ function SetupCanvas() {
     // Draw score
     ctx.fillText(score.toString(), 310, 127);
 
+    // Draw start thing
+    ctx.fillText(status, 10, 200);
+
     // Draw level label text
     ctx.fillText("LEVEL", 300, 157);
 
@@ -120,11 +123,15 @@ function SetupCanvas() {
 
     CreateCoordArray();
     
-    CreateTetromino();
+    // CreateTetromino();
 }
 
 function HandleKeyPress(key) {
-    if (status !== "Game Over") {
+    if ((status === "Press Space to Start" || status === "Game Over") &&
+        key.keyCode === 32) {
+            RestartGame();
+    }
+    if (status === "") {
         // a keycode (LEFT)
         if (key.keyCode === 65) {
             MoveTetromino(-1, 0);
@@ -140,12 +147,6 @@ function HandleKeyPress(key) {
         }
     }
 }
-
-
-
-
-
-
 
 // move tetromino based on input
 function MoveTetromino(x, y) {
@@ -241,6 +242,7 @@ function AddTetrominoToGameBoard(tetromino, tetrominoColor) {
     ctx.fillStyle = 'white';
     ctx.fillRect(310, 109, 140, 19);
     ctx.fillStyle = 'black';
+    ctx.font = '21px Arial';
     ctx.fillText(score.toString(), 310, 127);
 }
 
@@ -319,8 +321,16 @@ function CreateTetromino() {
         ctx.fillStyle = nextTetrominoColor;
         ctx.fillRect(coordinate.x + 310, coordinate.y + 240, 21, 21);
     }
+}
 
-    // ctx.fillText(status, 310, 261);
+function RestartGame() {
+    status = "";
+    ctx.fillStyle = 'white';
+    ctx.fillRect(11, 9, (23 * 12), (23 * 20));
+    for (let i = 0; i < gBArrayWidth; i++) {
+        gameBoard[i].fill(0);
+    }
+    CreateTetromino();
 }
 
 function DrawTetrisLogo() {
@@ -328,7 +338,7 @@ function DrawTetrisLogo() {
 }
 
 window.setInterval(function () {
-    if (status !== "Game Over")
+    if (status === "")
         MoveTetromino(0, 1);
 }, 1000);
 

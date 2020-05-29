@@ -143,7 +143,9 @@ function HandleKeyPress(key) {
             MoveTetromino(0, 1);
             // 9. e keycode calls for rotation of Tetromino
         } else if (key.keyCode === 69) {
-            RotateTetromino(true);
+            let ret = RotateTetromino(true, curTetromino, curTetrominoColor, rotateIndex, true);
+            curTetromino = ret[0];
+            rotateIndex = ret[1];
         }
     }
 }
@@ -248,6 +250,41 @@ function AddTetrominoToGameBoard(tetromino, tetrominoColor) {
 
 
 
+function FindBestSpot() {
+    let bestScore = Number.MIN_VALUE;
+    let bestRotate = -1;
+    let bestPos = [];
+
+    for (let i = 0; i < gBArrayHeight; i++) {
+        for (let j = 0; k < gBArrayWidth; j++) {
+            let position = [i, j];
+            for (let rot = 0; rot < 4; rot++) {
+                RotateTetromino(true, curTetromino, curTetrominoColor, rotateIndex, true);
+
+
+
+            }
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 function ReDrawGameBoard() {
     for (let i = 0; i < gBArrayWidth; i++) {
         for (let j = 0; j < gBArrayHeight; j++) {
@@ -348,19 +385,24 @@ window.setInterval(function () {
 /****************************************************/
 //    ROTATION
 
-function RotateTetromino(clockwise) {
+function RotateTetromino(clockwise, incomingTetromino, incomingTetrominoColor, curRotateIndex, draw) {
     let tetromino = [];
-    let oldRotateIndex = rotateIndex;
-    let newRotateIndex = rotateIndex + (clockwise ? 1 : -1);
+    let oldRotateIndex = curRotateIndex;
+    let newRotateIndex = curRotateIndex + (clockwise ? 1 : -1);
     newRotateIndex = newRotateIndex % 4;
-    let oldTetromino = JSON.parse(JSON.stringify(curTetromino));
+    let oldTetromino = JSON.parse(JSON.stringify(incomingTetromino));
     
-    for (let i = 0; i < curTetromino.length; i++) {
-        tetromino.push(RotateTile(curTetromino[i], clockwise));
+    for (let i = 0; i < incomingTetromino.length; i++) {
+        tetromino.push(RotateTile(incomingTetromino[i], clockwise));
     }
-    if (RotateOffset(tetromino, oldTetromino, oldRotateIndex, newRotateIndex)) {
-        rotateIndex = newRotateIndex;
+    curRotateIndex = newRotateIndex;
+    let tempTetromino = RotateOffset(tetromino, oldRotateIndex, newRotateIndex);
+    if (draw) {
+        incomingTetromino = tempTetromino;
+        DeleteTetromino(oldTetromino);
+        DrawTetromino(incomingTetromino, incomingTetrominoColor);
     }
+    return [incomingTetromino, newRotateIndex];
 }
 
 Number.prototype.mod = function(n) {
@@ -429,7 +471,7 @@ function RotateTile(tilePos, clockwise) {
     return [centerX + newX, centerY + newY];
 }
 
-function RotateOffset(tetromino, oldTetromino, oldRotateIndex, newRotateIndex) {
+function RotateOffset(tetromino, oldRotateIndex, newRotateIndex) {
     let offsetVal1, offsetVal2, endOffset = [0, 0];
     let curOffsetData;
 
@@ -452,13 +494,10 @@ function RotateOffset(tetromino, oldTetromino, oldRotateIndex, newRotateIndex) {
             tempTetromino[i][1] += endOffset[1];
         }
         if (!HitWall(tempTetromino) && !HitTetromino(tempTetromino)) {
-            curTetromino = tempTetromino;
-            DeleteTetromino(oldTetromino);
-            DrawTetromino(curTetromino, curTetrominoColor);
-            return true;
+            return tempTetromino;
         }
     }
-    return false;
+    return null;
 }
 
 let JLSTZ_offset = [

@@ -18,14 +18,17 @@
     See Nudity?
   </button>
 
-  <div id="gotcha" hidden="true">
+  <div id="gotcha" hidden>
     fucking idiot get horsed
   </div>
   
   <script>
     var aud = document.getElementById("ASong").children[0];
-    aud.play();
     var gotcha = document.getElementById("gotcha");
-    gotcha.hidden = false;
+
+    function playPause() {
+      aud.play();
+      gotcha.hidden = false;
+    }
   </script>
 </div>
